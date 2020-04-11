@@ -1,53 +1,26 @@
+mod args;
+
 use std::io::{
     Read,
     Write,
 };
-use structopt::StructOpt;
-use clap::arg_enum;
-arg_enum! {
-    #[derive(Debug)]
-    enum Radix {
-        Bin,
-        Oct,
-        Dec,
-        Hex,
-    }
-}
-
-#[derive(Debug, StructOpt)]
-#[structopt(about = "Inspect a file in binary, octal, decimal or hexadecimal.")]
-struct Opt {
-    /// Input file path
-    input: Option<std::path::PathBuf>,
-
-    /// Display memory address
-    #[structopt(short, long)]
-    indices: bool,
-
-    /// How many bytes per line
-    #[structopt(short, long, default_value="4")]
-    step: std::num::NonZeroUsize,
-
-    /// Radix to display bytes
-    #[structopt(short, long, possible_values = &Radix::variants(), case_insensitive = true, default_value="Bin")]
-    radix: Radix,
-}
+use args::{Args, Radix};
 
 fn main() -> std::io::Result<()> {
     
-    
-    let Opt {
+    let Args {
         indices,
         step,
         radix,
         input,
-    } = Opt::from_args();
+        ascii: _,
+    } = Args::from_args();
 
     let step = step.get();
 
     let stdout_guard = std::io::stdout();
     let stdin_guard  = std::io::stdin ();
-    
+
     let input: Box<dyn std::io::Read> = if let Some(path) = input {
         Box::new(std::fs::File::open(path)?)
     }
@@ -59,34 +32,41 @@ fn main() -> std::io::Result<()> {
 
     let mut stdout = stdout_guard.lock();
 
+    let mut buffer = Vec::with_capacity(step);
+
     for i in (0..).step_by(step) {
-        let mut count = 0;
+        buffer.clear();
         for byte in (&mut input).take(step) {
-            if indices && count == 0 {
-                write!(stdout, "{:04x}  ", i)?;
-            }
+            buffer.push(byte?);
+        }
+
+        if buffer.len() == 0 {
+            break
+        }
+
+        if indices {
+            write!(stdout, "{:04x}  ", i)?;
+        }
+
+        for &byte in &buffer {
+            // TODO: only match for format string
             match radix {
                 Radix::Bin => {
-                    write!(stdout, "{:08b} ", byte?)?;
+                    write!(stdout, "{:08b} ", byte)?;
                 }
                 Radix::Oct => {
-                    write!(stdout, "{:03o} ", byte?)?;
+                    write!(stdout, "{:03o} ", byte)?;
                 }
                 Radix::Dec => {
-                    write!(stdout, "{:03} ", byte?)?;
+                    write!(stdout, "{:03} ", byte)?;
                 }
                 Radix::Hex => {
-                    write!(stdout, "{:02x} ", byte?)?;
+                    write!(stdout, "{:02x} ", byte)?;
                 }
             }
-            count += 1;
         }
-        if count != 0 {
-            writeln!(stdout)?;
-        }
-        if count != step {
-            break;
-        }
+
+        writeln!(stdout)?;
     }
 
     Ok(())
