@@ -3,6 +3,7 @@ name = "bin-dump"
 version = "0.1.0"
 authors = ["uben <uben@protonmail.com>"]
 edition = "2018"
+description = "Inspect a file in binary, octal, decimal or hexadecimal."
 
 [dependencies]
 clap = "*"

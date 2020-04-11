@@ -15,7 +15,7 @@ arg_enum! {
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Print a binary representation of stdin.")]
+#[structopt(about = "Inspect a file in binary, octal, decimal or hexadecimal.")]
 struct Opt {
     /// Input file path
     input: Option<std::path::PathBuf>,
