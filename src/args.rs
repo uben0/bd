@@ -18,7 +18,7 @@ pub struct Args {
     /// Input file path
     pub input: Option<std::path::PathBuf>,
 
-    /// Prints memory address
+    /// Prints lines index
     #[structopt(short, long)]
     pub indices: bool,
 

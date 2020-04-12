@@ -6,14 +6,31 @@ use std::io::{
 };
 use args::{Args, Radix};
 
+fn ascii_from_byte(byte: u8) -> char {
+    match byte {
+        32..=126 => byte as char,
+        _ => ' ',
+    }
+}
+
+fn _term_have_escape_seq() -> bool {
+    match std::env::var("TERM") {
+        Ok(value) => (
+            value == "xterm-256color" ||
+            value == "linux"
+        ),
+        _ => false,
+    }
+}
+
 fn main() -> std::io::Result<()> {
-    
+
     let Args {
         indices,
         step,
         radix,
         input,
-        ascii: _,
+        ascii,
     } = Args::from_args();
 
     let step = step.get();
@@ -63,6 +80,30 @@ fn main() -> std::io::Result<()> {
                 Radix::Hex => {
                     write!(stdout, "{:02x} ", byte)?;
                 }
+            }
+        }
+
+        for _ in buffer.len() .. step {
+            match radix {
+                Radix::Bin => {
+                    write!(stdout, "         ")?;
+                }
+                Radix::Oct => {
+                    write!(stdout, "    ")?;
+                }
+                Radix::Dec => {
+                    write!(stdout, "    ")?;
+                }
+                Radix::Hex => {
+                    write!(stdout, "   ")?;
+                }
+            }
+        }
+
+        if ascii {
+            write!(stdout, "  ")?;
+            for &byte in &buffer {
+                write!(stdout, "{} ", ascii_from_byte(byte))?;
             }
         }
 
