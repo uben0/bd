@@ -33,6 +33,14 @@ pub struct Args {
     /// Prints ASCII interpretation
     #[structopt(short, long)]
     pub ascii: bool,
+
+    /// Uses escape sequences to highlight text
+    #[structopt(short, long)]
+    pub escape: bool,
+
+    /// Enables --indices, --ascii and --escape
+    #[structopt(short, long)]
+    pub pretty: bool,
 }
 
 impl Args {
