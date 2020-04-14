@@ -7,8 +7,11 @@ USAGE:
     bin-dump [FLAGS] [OPTIONS] [input]
 
 FLAGS:
+    -a, --ascii      Adds an ASCII interpretation
+    -e, --escape     Uses escape sequences to style the output
     -h, --help       Prints help information
-    -i, --indices    Display memory address
+    -i, --indices    Adds the bytes index
+    -p, --pretty     Enables --indices, --ascii and --escape
     -V, --version    Prints version information
 
 OPTIONS:

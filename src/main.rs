@@ -15,31 +15,6 @@ fn ascii_from_byte(byte: u8) -> Option<char> {
     }
 }
 
-// fn _term_have_escape_seq() -> bool {
-//     match std::env::var("TERM") {
-//         Ok(value) => {
-//             eprintln!("TERM={:?}", value);
-//             value == "xterm-256color" ||
-//             value == "linux"
-//         },
-//         _ => false,
-//     }
-// }
-
-// fn pretty_print_byte(output: &mut impl std::io::Write, byte: u8) -> io::Result<()> {
-//     let mut byte = byte.reverse_bits();
-//     for _ in 0..8 {
-//         if byte & 1 == 1 {
-//             write!(output, "{}1{}", term::BOLD, term::RESET_ALL)?
-//         }
-//         else {
-//             write!(output, "{}0{}", term::DIM, term::RESET_ALL)?
-//         }
-//         byte >>= 1;
-//     }
-//     Ok(())
-// }
-
 fn bin_dump(
     input     : impl Read,
     mut output: impl Write,

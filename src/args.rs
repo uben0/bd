@@ -18,7 +18,7 @@ pub struct Args {
     /// Input file path
     pub input: Option<std::path::PathBuf>,
 
-    /// Prints lines index
+    /// Adds the bytes index
     #[structopt(short, long)]
     pub indices: bool,
 
@@ -30,11 +30,11 @@ pub struct Args {
     #[structopt(short, long, possible_values = &Radix::variants(), case_insensitive = true, default_value="Bin")]
     pub radix: Radix,
 
-    /// Prints ASCII interpretation
+    /// Adds an ASCII interpretation
     #[structopt(short, long)]
     pub ascii: bool,
 
-    /// Uses escape sequences to highlight text
+    /// Uses escape sequences to style the output
     #[structopt(short, long)]
     pub escape: bool,
 
