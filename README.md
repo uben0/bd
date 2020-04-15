@@ -22,3 +22,9 @@ OPTIONS:
 ARGS:
     <input_file>    Specify a input file path, if none, standard input is used
 ```
+
+## Install
+
+1. Install Rust from [rust-lang.org](https://www.rust-lang.org/tools/install).
+2. Compile using `cargo build --release`.
+3. Copy `target/release/bin-dump` in your `bin` directory.
