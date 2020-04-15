@@ -16,19 +16,19 @@ fn ascii_from_byte(byte: u8) -> Option<char> {
 }
 
 fn bin_dump(
-    input     : impl Read,
+    mut input : impl Iterator<Item=io::Result<u8>>,
     mut output: impl Write,
     radix     : Radix,
-    indices   : bool,
+    index     : bool,
     ascii     : bool,
     escape    : bool,
     step      : usize,
+    start     : usize,
 ) -> io::Result<()> {
 
-    let mut input = input.bytes();
     let mut buffer = Vec::with_capacity(step);
 
-    for i in (0..).step_by(step) {
+    for i in (start..).step_by(step) {
         buffer.clear();
         for byte in (&mut input).take(step) {
             buffer.push(byte?);
@@ -38,7 +38,7 @@ fn bin_dump(
             break
         }
 
-        if indices {
+        if index {
             if escape {
                 write!(output, "{}{:06x}{}  ", term::BOLD, i, term::RESET_ALL)?;
             }
@@ -47,7 +47,12 @@ fn bin_dump(
             }
         }
 
+        let mut have_pred = false;
         for &byte in &buffer {
+            if have_pred {
+                write!(output, " ")?;
+            }
+            have_pred = true;
             if escape && byte == 0 {
                 write!(output, "{}", term::DIM)?;
             }
@@ -68,27 +73,25 @@ fn bin_dump(
             if escape && byte == 0 {
                 write!(output, "{}", term::RESET_ALL)?;
             }
-            write!(output, " ")?;
         }
-
-        for _ in buffer.len() .. step {
-            match radix {
-                Radix::Bin => {
-                    write!(output, "         ")?;
-                }
-                Radix::Oct => {
-                    write!(output, "    ")?;
-                }
-                Radix::Dec => {
-                    write!(output, "    ")?;
-                }
-                Radix::Hex => {
-                    write!(output, "   ")?;
+        
+        if ascii {
+            for _ in buffer.len() .. step {
+                match radix {
+                    Radix::Bin => {
+                        write!(output, "         ")?;
+                    }
+                    Radix::Oct => {
+                        write!(output, "    ")?;
+                    }
+                    Radix::Dec => {
+                        write!(output, "    ")?;
+                    }
+                    Radix::Hex => {
+                        write!(output, "   ")?;
+                    }
                 }
             }
-        }
-
-        if ascii {
             write!(output, "  ")?;
             let mut text = false;
             if escape {
@@ -102,21 +105,21 @@ fn bin_dump(
                                 write!(output, "{}{}", term::RESET_ALL, term::DIM)?;
                                 text = true;
                             }
-                            write!(output, "{} ", c)?
+                            write!(output, " {}", c)?
                         }
                         None => {
                             if text {
                                 write!(output, "{}{}", term::RESET_ALL, term::BOLD)?;
                                 text = false;
                             }
-                            write!(output, "· ")?
+                            write!(output, " ·")?
                         }
                     }
                 }
                 else {
                     match ascii_from_byte(byte) {
-                        Some(c) => write!(output, "{} ", c)?,
-                        None    => write!(output, ". ")?,
+                        Some(c) => write!(output, " {}", c)?,
+                        None    => write!(output, " .")?,
                     }
                 }
             }
@@ -136,19 +139,20 @@ fn bin_dump(
 fn main() -> std::io::Result<()> {
 
     let Args {
-        mut indices,
-        step,
+        mut index,
+        line: step,
         radix,
         input,
         mut ascii,
         mut escape,
         pretty,
+        select: range,
     } = Args::from_args();
 
     if pretty {
-        indices = true;
-        ascii   = true;
-        escape  = true;
+        index  = true;
+        ascii  = true;
+        escape = true;
     }
 
     let step = step.get();
@@ -163,14 +167,33 @@ fn main() -> std::io::Result<()> {
         Box::new(stdin_guard.lock())
     };
 
+    let input = io::BufReader::new(input).bytes();
+    let output = io::BufWriter::new(stdout_guard.lock());
+
+    let mut start_at = 0;
+    let input: Box<dyn Iterator<Item=io::Result<u8>>> = match range {
+        Some(args::IndexRange{start, stop}) => {
+            start_at = start;
+            let input = input.skip(start);
+            if let Some(stop) = stop {
+                Box::new(input.take(stop - start))
+            }
+            else {
+                Box::new(input)
+            }
+        }
+        None => Box::new(input),
+    };
+
     match bin_dump(
-        io::BufReader::new(input),
-        io::BufWriter::new(stdout_guard.lock()),
+        input,
+        output,
         radix,
-        indices,
+        index,
         ascii,
         escape,
-        step
+        step,
+        start_at,
     ) {
         Err(e) if e.kind() != io::ErrorKind::BrokenPipe => Err(e),
         _ => Ok(()),

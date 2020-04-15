@@ -6,5 +6,4 @@ edition = "2018"
 description = "Inspect a file in binary, octal, decimal or hexadecimal."
 
 [dependencies]
-clap = "*"
 structopt = "*"
